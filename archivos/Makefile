@@ -19,7 +19,7 @@ CROSS_FLAGS = -Wall -std=c++17
 # TARGETS PRINCIPALES
 # ========================
 
-all: hola dinamico estatico hilos procesos blink
+all: hola dinamico estatico delay memoria hilos procesos blink
 
 # ========================
 # HOLA MUNDO
@@ -33,6 +33,20 @@ dinamico:
 
 estatico:
 	$(CXX) hola.cpp -o hola_estatico -static
+
+# ========================
+# DELAY (Actividad 4)
+# ========================
+
+delay:
+	$(CXX) delay.cpp -o delay
+
+# ========================
+# MEMORIA (Actividad 5)
+# ========================
+
+memoria:
+	$(CXX) memoria.cpp -o memoria
 
 # ========================
 # HILOS
@@ -68,4 +82,4 @@ cross:
 # ========================
 
 clean:
-	rm -f hola hola_dinamico hola_estatico hilos procesos blink hola_arm_dinamico hola_arm_estatico
+	rm -f hola hola_dinamico hola_estatico delay memoria hilos procesos blink hola_arm_dinamico hola_arm_estatico
