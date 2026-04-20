@@ -398,11 +398,7 @@ A diferencia del Heap, aquí no se llega al OOM porque el límite del stack es m
 
 ## Actividad 6: Procesos vs Hilos
 
-### Archivo de prueba
 
-https://www.gutenberg.org/ebooks/2000.txt.utf-8
-
----
 
 ### Versión Procesos
 
@@ -465,7 +461,7 @@ int main() {
 
 - Se ejecutó la versión con fork() + pipe.
 - Aparecen dos procesos distintos (./procesos).
-- Tienen PIDs diferentes (1796 y 9948 en la captura).
+- Tienen PIDs diferentes (9947 y 9948 en la captura).
 - Cada proceso tiene su propio espacio de memoria.
 La memoria RES (memoria residente física) no se duplica de forma idéntica porque el padre solo lee y envía, mientras que el hijo cuenta. Sin embargo, el código del programa y las bibliotecas se comparten parcialmente gracias al mecanismo de Copy-on-Write.
 
