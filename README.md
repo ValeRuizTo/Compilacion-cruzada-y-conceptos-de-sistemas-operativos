@@ -227,7 +227,7 @@ El objetivo es observar cómo se comportan ambos cuando se consumen de forma inf
 
 using namespace std;
 
-// 🔴 HEAP: reserva infinita
+//  HEAP: reserva infinita
 void consumirHeap() {
     vector<char*> bloques;
 
@@ -240,7 +240,7 @@ void consumirHeap() {
     }
 }
 
-// 🔴 STACK: recursión infinita
+//  STACK: recursión infinita
 void consumirStack(int profundidad = 0) {
     char bloque[1024 * 1024]; // 1 MB en stack
     memset(bloque, 0, sizeof(bloque));
