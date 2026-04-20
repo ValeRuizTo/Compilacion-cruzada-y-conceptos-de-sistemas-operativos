@@ -26,45 +26,57 @@ g++ hola_mundo.cpp -o estatico -static
 
 #### Tamaño de binarios
 
-```bash
-ls -lh
-```
+- Binario dinámico: 17 KB  
+- Binario estático: 2.3 MB  
 
-**Resultado:**
+El binario estático es aproximadamente **135 veces más grande** que el dinámico.
 
-```
-[COMPLETAR]
-```
+Esto ocurre porque el enlazado estático incluye todas las librerías dentro del ejecutable, mientras que el dinámico solo referencia librerías externas.
+
+#### Diferencia de tamaño
+
+De la salida:
+
+hola_dinamico → 17K
+hola_estatico → 2.3M
+
+#### Proporción exacta
+2.3 MB ≈ 2300 KB
+2300 / 17 ≈ 135 veces más grande
+
 
 #### Dependencias dinámicas
 
-```bash
-ldd dinamico
-ldd estatico
-```
+El binario dinámico requiere las siguientes librerías del sistema:
 
-**Resultado:**
+- libstdc++.so.6 (librería estándar de C++)
+- libc.so.6 (librería estándar de C)
+- libm.so.6 (operaciones matemáticas)
+- libgcc_s.so.1 (soporte del compilador)
+- ld-linux-x86-64.so.2 (loader dinámico)
+- linux-vdso.so.1 (optimización de syscalls)
 
-```
-[COMPLETAR]
-```
+En cambio, el binario estático no requiere dependencias externas, ya que todas están incluidas dentro del ejecutable.
 
-#### Trazabilidad de syscalls
+### Trazabilidad de llamadas al sistema
 
-```bash
-strace -o traza_dinamica.txt ./dinamico
-strace -o traza_estatica.txt ./estatico
-diff traza_estatica.txt traza_dinamica.txt
-```
+Cantidad de syscalls:
 
-**Análisis:**
+- Binario dinámico: 66 llamadas
+- Binario estático: 19 llamadas
 
-* Syscalls adicionales en dinámico:
+El binario dinámico realiza muchas más llamadas al sistema debido a la carga de librerías en tiempo de ejecución.
 
-```
-[COMPLETAR]
-```
+Las llamadas adicionales más relevantes son:
 
+- openat → apertura de librerías compartidas
+- mmap → mapeo de librerías en memoria
+- mprotect → configuración de permisos de memoria
+- close → cierre de archivos abiertos
+
+Estas llamadas son necesarias para que el loader dinámico pueda cargar las dependencias antes de ejecutar el programa principal.
+
+En contraste, el binario estático no necesita cargar librerías externas, por lo que ejecuta menos llamadas al sistema.
 ---
 
 ## Actividad 2: Cross-Compiling
