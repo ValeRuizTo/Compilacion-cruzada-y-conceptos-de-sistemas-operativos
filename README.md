@@ -314,48 +314,203 @@ https://www.gutenberg.org/ebooks/2000.txt.utf-8
 
 ### Versión Procesos
 
-* Observación en `top`:
 
 ```
-[COMPLETAR]
-```
+#include <iostream>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <cstring>
+#include <map>
 
-* Uso de memoria:
+using namespace std;
 
-```
-[COMPLETAR]
-```
+int main() {
+    int fd[2];
+    pipe(fd);
 
----
+    pid_t pid = fork();
+
+    if (pid == 0) {
+        //  HIJO: recibe palabras y cuenta
+        close(fd[1]);
+
+        map<string, int> contador;
+        char buffer[100];
+
+        while (read(fd[0], buffer, sizeof(buffer)) > 0) {
+            string palabra(buffer);
+            contador[palabra]++;
+        }
+
+        cout << "Conteo en hijo:\n";
+        for (auto &p : contador) {
+            cout << p.first << ": " << p.second << endl;
+        }
+
+        close(fd[0]);
+    } else {
+        //  PADRE: lee archivo y envía palabras
+        close(fd[0]);
+
+        FILE* file = fopen("libro.txt", "r");
+        char palabra[100];
+
+        while (fscanf(file, "%s", palabra) != EOF) {
+            write(fd[1], palabra, sizeof(palabra));
+        }
+
+        fclose(file);
+        close(fd[1]);
+
+        wait(NULL);
+    }
+
+    sleep(10); // para observar en htop
+    return 0;
+}
+```
+<img width="792" height="232" alt="image" src="https://github.com/user-attachments/assets/ad8d7206-66f4-4faf-b605-2ae93d9c3774" />
+
+- Se ejecutó la versión con fork() + pipe.
+- Aparecen dos procesos distintos (./procesos).
+- Tienen PIDs diferentes (1796 y 9948 en la captura).
+- Cada proceso tiene su propio espacio de memoria.
+La memoria RES (memoria residente física) no se duplica de forma idéntica porque el padre solo lee y envía, mientras que el hijo cuenta. Sin embargo, el código del programa y las bibliotecas se comparten parcialmente gracias al mecanismo de Copy-on-Write.
 
 ### Versión Hilos
 
-* Activar hilos en `top`:
-
 ```
-H
-```
+#include <iostream>
 
-* Observaciones:
+#include <pthread.h>
 
-```
-[COMPLETAR]
-```
+#include <queue>
 
----
+#include <map>
+
+#include <fstream>
+
+#include <string>
+
+#include <unistd.h>
+ 
+using namespace std;
+ 
+queue<string> cola;
+
+map<string, int> contador;
+ 
+pthread_mutex_t mutex1;
+ 
+bool terminado = false;
+ 
+//  Productor (lee archivo)
+
+void* leerArchivo(void*) {
+
+    ifstream file("libro.txt");
+
+    string palabra;
+ 
+    while (file >> palabra) {
+
+        pthread_mutex_lock(&mutex1);
+
+        cola.push(palabra);
+
+        pthread_mutex_unlock(&mutex1);
+ 
+        usleep(500); // pequeño delay para hacerlo visible
+
+    }
+ 
+    terminado = true;
+
+    return NULL;
+
+}
+ 
+//  Consumidor (cuenta palabras)
+
+void* contar(void*) {
+
+    while (true) { //  infinito para mantener el hilo vivo
+
+        pthread_mutex_lock(&mutex1);
+ 
+        if (!cola.empty()) {
+
+            string palabra = cola.front();
+
+            cola.pop();
+
+            contador[palabra]++;
+
+        }
+ 
+        pthread_mutex_unlock(&mutex1);
+ 
+        usleep(1000); // evita que consuma CPU al 100%
+
+    }
+ 
+    return NULL;
+
+}
+ 
+int main() {
+
+    pthread_t t1, t2;
+ 
+    pthread_mutex_init(&mutex1, NULL);
+ 
+    pthread_create(&t1, NULL, leerArchivo, NULL);
+
+    pthread_create(&t2, NULL, contar, NULL);
+ 
+    //  NO hacemos join para que sigan vivos
+
+    // pthread_join(t1, NULL);
+
+    // pthread_join(t2, NULL);
+ 
+    cout << "Hilos ejecutándose... revisa htop" << endl;
+ 
+    sleep(30); //  tiempo suficiente para verlos en htop
+ 
+    return 0;
+
+}
+ 
+```
+<img width="912" height="152" alt="image" src="https://github.com/user-attachments/assets/cde1b576-ddf3-4a81-93d7-9cc47e109086" />
+
+Se ejecutó la versión con pthread.
+Captura con ps -eLf | grep hilos:
+
+- Todos los hilos tienen el mismo PID principal (11443).
+- Cada hilo tiene un TID (Thread ID) diferente (11443, 11444, 11445).
+- Todos comparten el mismo TGID (Thread Group ID) = 11443.
+- La memoria RES es exactamente la misma para todos los hilos porque comparten el mismo espacio de direcciones del proceso.
+
+El PID que vemos en ps o htop para hilos es en realidad el TID (identificador del hilo).
+Todos los hilos pertenecen al mismo grupo de hilos (TGID = PID del proceso principal).
+Los hilos comparten la memoria (heap, datos globales, código), por eso la columna RES es prácticamente idéntica y no se duplica.
+
+
+En sistemas Linux, cada hilo es una entidad planificable independiente, por lo que el sistema operativo le asigna un identificador propio (TID o PID a nivel de kernel). Esto explica por qué cada hilo aparece con un identificador diferente.Sin embargo, todos los hilos pertenecen a un mismo proceso, por lo que comparten el mismo TGID (Thread Group ID), el cual corresponde al identificador del proceso principal. Además, al pertenecer al mismo proceso, todos los hilos comparten el mismo espacio de direcciones de memoria, incluyendo el heap y las variables globales. Por esta razón, la memoria RES (memoria residente) es exactamente la misma para todos los hilos, ya que no existe duplicación de memoria como ocurre en el caso de los procesos.
+
 
 ### Análisis Final
 
-* Diferencia entre PID y TGID:
-
-```
-[COMPLETAR]
-```
-
-* Uso de memoria compartida:
-
-```
-[COMPLETAR]
-```
+| Característica        | Procesos                                      | Hilos                                      |
+|----------------------|----------------------------------------------|-------------------------------------------|
+| Espacio de memoria   | Aislado (cada uno tiene su propio)           | Compartido                                |
+| Creación             | `fork()` (más pesado)                        | `pthread_create()` (más ligero)           |
+| Comunicación         | Pipe, sockets, etc.                          | Variables globales + mutex                |
+| Memoria RES          | No se comparte completamente                 | Se comparte (misma RES)                   |
+| Identificador        | PID diferente                                | Mismo PID/TGID, TID diferente             |
+| Overhead             | Mayor                                        | Menor                                     |
+| Protección           | Alta (fallo en uno no afecta al otro)        | Baja (fallo en uno puede afectar a todos) |
 
 ---
