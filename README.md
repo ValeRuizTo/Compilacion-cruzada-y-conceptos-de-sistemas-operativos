@@ -74,9 +74,32 @@ Las llamadas adicionales más relevantes son:
 - mprotect → configuración de permisos de memoria
 - close → cierre de archivos abiertos
 
-Estas llamadas son necesarias para que el loader dinámico pueda cargar las dependencias antes de ejecutar el programa principal.
+```bash
 
-En contraste, el binario estático no necesita cargar librerías externas, por lo que ejecuta menos llamadas al sistema.
+access("/etc/ld.so.preload", R_OK)
+openat(..., "/etc/ld.so.cache", ...)
+openat(..., "/lib/x86_64-linux-gnu/libstdc++.so.6", ...)
+openat(..., "/lib/x86_64-linux-gnu/libc.so.6", ...)
+openat(..., "/lib/x86_64-linux-gnu/libm.so.6", ...)
+```
+En particular, se identifican los siguientes grupos de syscalls:
+
+- **Acceso a archivos**: `access`, `openat`  
+  → Utilizadas para localizar y abrir las librerías dinámicas (.so)
+
+- **Lectura de archivos**: `read`, `pread64`  
+  → Permiten cargar el contenido de las librerías
+
+- **Gestión de memoria**: `mmap`  
+  → Se usa para mapear las librerías en el espacio de memoria del proceso
+
+- **Permisos de memoria**: `mprotect`  
+  → Configura permisos de lectura y ejecución sobre las regiones cargadas
+
+- **Metadatos de archivos**: `fstat`  
+  → Obtiene información sobre las librerías
+
+Estas llamadas no aparecen en la versión estática, ya que todas las dependencias están incluidas dentro del binario, eliminando la necesidad de cargarlas dinámicamente.
 ---
 
 ## Actividad 2: Cross-Compiling
