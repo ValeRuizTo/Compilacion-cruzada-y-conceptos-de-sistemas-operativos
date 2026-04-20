@@ -1,4 +1,9 @@
 # Compilación cruzada y conceptos de sistemas operativos
+Valentina Ruiz
+Darek Aljuri
+Santiago gutierrez
+Danna sanchez
+
 
 # Observabilidad del Sistema y Sistemas Embebidos
 
