@@ -20,10 +20,9 @@ Repositorio del proyecto práctico enfocado en:
 <img width="598" height="68" alt="image" src="https://github.com/user-attachments/assets/3054c93d-3777-4c20-af99-d701249d90fe" />
 
 
-```bash
 g++ hola_mundo.cpp -o dinamico
 g++ hola_mundo.cpp -o estatico -static
-```
+
 
 ### Análisis
 
