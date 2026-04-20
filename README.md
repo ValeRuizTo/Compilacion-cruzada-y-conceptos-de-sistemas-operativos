@@ -261,6 +261,9 @@ int main() {
     return 0;
 }
 ```
+<img width="833" height="548" alt="image" src="https://github.com/user-attachments/assets/b5da422e-0692-4f99-ae7e-37ff59a70a60" />
+
+
 
 ## Consumo de Heap 
 
@@ -286,7 +289,7 @@ Esto demuestra que el Heap puede crecer casi hasta agotar toda la memoria del si
 
 ## Consumo de Stack 
 
-<img width="833" height="548" alt="image" src="https://github.com/user-attachments/assets/b5da422e-0692-4f99-ae7e-37ff59a70a60" />
+<img width="510" height="297" alt="image" src="https://github.com/user-attachments/assets/80e00913-38c0-443d-b98f-9379ef50e0e0" />
 
 El error observado fue 
 ```
@@ -294,16 +297,11 @@ El error observado fue
 
 ```
 
-- El proceso terminó con un Segmentation Fault (segfault).
-- Esto ocurrió porque el stack tiene un límite máximo fijo (generalmente 8 MB en Ubuntu).
-Cada llamada recursiva + el arreglo local de 1 MB hace que el stack crezca muy rápido y supere este límite, ademas el Sistema Operativo detiene el proceso inmediatamente con un segfault para evitar que se corrompa otras áreas de memoria.
+- El proceso falló con Segmentation Fault al alcanzar 6 MB de profundidad en el stack.
+- Esto ocurrió porque el stack tiene un límite máximo fijo configurado por el sistema operativo
+- Cada llamada recursiva + el arreglo local de 1 MB hace que el stack crezca muy rápido y supere este límite, ademas el Sistema Operativo detiene el proceso inmediatamente con un segfault para evitar que se corrompa otras áreas de memoria.
 
 A diferencia del Heap, aquí no se llega al OOM porque el límite del stack es mucho más restrictivo y se hace cumplir antes.
-
-<img width="510" height="297" alt="image" src="https://github.com/user-attachments/assets/80e00913-38c0-443d-b98f-9379ef50e0e0" />
-
-El proceso falló con Segmentation Fault al alcanzar 6 MB de profundidad en el stack.
-Esto ocurre porque el stack tiene un tamaño máximo fijo configurado por el sistema operativo
 
 
 ## Actividad 6: Procesos vs Hilos
