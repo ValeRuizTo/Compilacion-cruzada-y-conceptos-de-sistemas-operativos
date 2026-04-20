@@ -23,6 +23,9 @@ Repositorio del proyecto práctico enfocado en:
 g++ hola_mundo.cpp -o dinamico
 g++ hola_mundo.cpp -o estatico -static
 
+<img width="600" height="167" alt="image" src="https://github.com/user-attachments/assets/e11e9f17-dfb7-43d7-b4f2-87387358b807" />
+
+
 
 ### Análisis
 
