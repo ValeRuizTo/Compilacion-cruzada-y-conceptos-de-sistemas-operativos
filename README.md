@@ -28,7 +28,7 @@ g++ hola_mundo.cpp -o estatico -static
 
 <img width="847" height="152" alt="image" src="https://github.com/user-attachments/assets/93c6f055-b647-4a53-9a80-580bd2444828" />
 
-#### Tamaño de binarios
+### Tamaño de binarios
 
 - Binario dinámico: 17 KB  
 - Binario estático: 2.3 MB  
@@ -39,7 +39,7 @@ Esto ocurre porque el enlazado estático incluye todas las librerías dentro del
 
 <img width="742" height="182" alt="image" src="https://github.com/user-attachments/assets/1415fcb5-a278-4a0b-90ce-56a957e74196" />
 
-#### Diferencia de tamaño
+### Diferencia de tamaño
 
 De la salida:
 
@@ -51,7 +51,7 @@ hola_estatico → 2.3M
 2300 / 17 ≈ 135 veces más grande
 
 
-#### Dependencias dinámicas
+### Dependencias dinámicas
 
 El binario dinámico requiere las siguientes librerías del sistema:
 
