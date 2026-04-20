@@ -113,37 +113,52 @@ Estas llamadas no aparecen en la versión estática, ya que todas las dependenci
 
 ## Actividad 2: Cross-Compiling
 
-### Compilación
+Compilar un programa sencillo (Hola Mundo dinámico) para arquitectura ARM64 (aarch64) desde la máquina host (VirtualBox), verificar su arquitectura, ejecutarlo con emulación y finalmente transferirlo y ejecutarlo de forma nativa en la Raspberry Pi 5.
 
-```bash
-aarch64-linux-gnu-g++ hola_mundo.cpp -o hola_arm
-```
-
-### Verificación
-
-```bash
-file hola_arm
-```
-
-**Salida:**
+### Codigo fuente
 
 ```
-[COMPLETAR]
+#include <iostream>
+
+int main() {
+    std::cout << "Hola Mundo" << std::endl;
+    return 0;
+}
+
+```
+Cross-Compilación en la máquina Host
+
+```
+aarch64-linux-gnu-g++ hola.cpp -o hola_arm_dinamico
 ```
 
-### Ejecución con QEMU
-
-```bash
-qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./hola_arm
+Verificación de la arquitectura del binario
+```
+file hola_arm_dinamico
 ```
 
-### Transferencia a Raspberry Pi
+<img width="826" height="120" alt="image" src="https://github.com/user-attachments/assets/5deafa62-c498-481d-8a87-4369b1a70938" />
 
-```bash
-scp hola_arm pi@<IP>:/home/pi/
+Ejecución simulada en la máquina Host (usando QEMU)
+
+```
+qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./hola_arm_dinamico
+```
+Transferencia del binario a la Raspberry Pi 5
+
+```
+scp hola_arm_dinamico raspi@10.89.220.87:/home/raspi/
 ```
 
----
+<img width="1300" height="145" alt="image" src="https://github.com/user-attachments/assets/966e2b93-1195-4438-9d0a-00a89c20bccc" />
+
+### Análisis
+
+- Cross-compiling permite aprovechar la potencia de la máquina host (PC) para compilar más rápido.
+- El comando file es muy útil para confirmar que el binario tiene la arquitectura correcta (aarch64 en lugar de x86_64).
+- El binario es dinámicamente linked, por lo que necesita las librerías correspondientes en la Raspberry Pi (que ya vienen instaladas por defecto en Raspberry Pi OS).
+- Usando scp se transfiere fácilmente el ejecutable a la placa.
+- La ejecución nativa en la Raspberry Pi 5 es mucho más eficiente que emularla con QEMU.
 
 # Parte B: Interacción con Hardware
 
