@@ -17,12 +17,17 @@ Repositorio del proyecto práctico enfocado en:
 
 ### Compilación
 
+<img width="598" height="68" alt="image" src="https://github.com/user-attachments/assets/3054c93d-3777-4c20-af99-d701249d90fe" />
+
+
 ```bash
 g++ hola_mundo.cpp -o dinamico
 g++ hola_mundo.cpp -o estatico -static
 ```
 
 ### Análisis
+
+<img width="847" height="152" alt="image" src="https://github.com/user-attachments/assets/93c6f055-b647-4a53-9a80-580bd2444828" />
 
 #### Tamaño de binarios
 
@@ -32,6 +37,8 @@ g++ hola_mundo.cpp -o estatico -static
 El binario estático es aproximadamente **135 veces más grande** que el dinámico.
 
 Esto ocurre porque el enlazado estático incluye todas las librerías dentro del ejecutable, mientras que el dinámico solo referencia librerías externas.
+
+<img width="742" height="182" alt="image" src="https://github.com/user-attachments/assets/1415fcb5-a278-4a0b-90ce-56a957e74196" />
 
 #### Diferencia de tamaño
 
