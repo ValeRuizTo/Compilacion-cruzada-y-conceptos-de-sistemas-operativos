@@ -164,26 +164,95 @@ scp hola_arm_dinamico raspi@10.89.220.87:/home/raspi/
 
 ## Actividad 3: GPIO con libgpiod
 
-### Compilación cruzada
+### Código fuente (blink.cpp)
 
 ```bash
-aarch64-linux-gnu-g++ gpio_blink.cpp -o gpio_blink -lgpiod
+#include <iostream>
+#include <gpiod.h>
+#include <unistd.h>
+
+int main() {
+    gpiod_chip *chip;
+    gpiod_line *line;
+
+    // Abrir el chip GPIO por su label (nombre)
+    chip = gpiod_chip_open_by_name("gpiochip0");
+    if (!chip) {
+        std::cerr << "Error: No se pudo abrir gpiochip0" << std::endl;
+        return 1;
+    }
+
+    // Obtener la línea 17 (GPIO17 - comúnmente usada para LEDs)
+    line = gpiod_chip_get_line(chip, 17);
+    if (!line) {
+        std::cerr << "Error: No se pudo obtener la línea 17" << std::endl;
+        gpiod_chip_close(chip);
+        return 1;
+    }
+
+    // Solicitar la línea como salida
+    if (gpiod_line_request_output(line, "blink", 0) < 0) {
+        std::cerr << "Error: No se pudo configurar la línea como salida" << std::endl;
+        gpiod_chip_close(chip);
+        return 1;
+    }
+
+    std::cout << "Parpadeo iniciado en GPIO17. Presiona Ctrl+C para detener." << std::endl;
+
+    while (true) {
+        // Encender (ON)
+        gpiod_line_set_value(line, 1);
+        std::cout << "ON" << std::endl;
+        sleep(1);
+
+        // Apagar (OFF)
+        gpiod_line_set_value(line, 0);
+        std::cout << "OFF" << std::endl;
+        sleep(1);
+    }
+
+    // Limpieza (nunca se alcanza por el bucle infinito)
+    gpiod_line_release(line);
+    gpiod_chip_close(chip);
+    return 0;
+}
 ```
 
-### Verificación en Raspberry Pi
+Compilación en la Raspberry Pi 5
 
 ```bash
+g++ blink.cpp -o blink -lgpiod
+```
+
+Ejecución del programa
+```bash
+sudo ./blink
+```
+<img width="570" height="560" alt="image" src="https://github.com/user-attachments/assets/d42cfa27-e806-4af0-9d24-cd8aa85051cc" />
+
+
+Verificación del estado del GPIO mientras el programa está corriendo
+```
 gpioinfo
-gpioget
 ```
+<img width="1040" height="455" alt="image" src="https://github.com/user-attachments/assets/8b97dce9-6846-4584-ac6b-8ad68b3c8499" />
+
+Compilación y ejecución (resumen en una sola captura)
+
+<img width="588" height="140" alt="image" src="https://github.com/user-attachments/assets/e5dc90e8-ccad-4641-9e3d-3b60234a24ef" />
+
+libgpiod es la forma de controlar GPIO en Linux.
+
+- El programa reserva la línea GPIO17 como salida y la configura con el consumer name "blink".
+- Mientras el programa está en ejecución, otros procesos pueden ver que la línea está ocupada mediante gpioinfo.
+
+Es necesario ejecutar el programa con sudo porque el acceso a /dev/gpiochip* requiere permisos elevados.
 
 **Observación:**
+<img width="450" height="526" alt="image" src="https://github.com/user-attachments/assets/1e3014e2-ed89-4454-b724-01f3ec651138" />
 
-```
-[COMPLETAR]
-```
+<img width="409" height="488" alt="image" src="https://github.com/user-attachments/assets/2a6765ce-2c02-499f-9c9e-23187dbd8854" />
 
----
 
 # Parte C: Tiempo, Memoria y Concurrencia
 
