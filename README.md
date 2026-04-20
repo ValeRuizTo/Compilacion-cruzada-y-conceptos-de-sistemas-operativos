@@ -176,62 +176,135 @@ gpioget
 
 ### Ejecución
 
-```bash
-time ./delay
-```
+<img width="697" height="452" alt="image" src="https://github.com/user-attachments/assets/09b603d7-2794-4f2e-b96d-ac3001844125" />
+
+
 
 **Resultados:**
 
-* real:
-* user:
-* sys:
+* real: 2.006 s
+* user: 0.005 s
+* sys: 0.000 s
 
 **Análisis:**
 
-```
-[COMPLETAR]
-```
+Al ejecutar el programa con time, se observa que el tiempo real (real) es aproximadamente de 2 segundos, mientras que el tiempo de CPU en modo usuario (user) es muy cercano a 0 (0.005s).
+Esto ocurre porque la función nanosleep suspende la ejecución del proceso durante el tiempo especificado, en lugar de realizar una espera activa. Durante este período, el proceso permanece bloqueado y no utiliza el procesador.
+El pequeño valor en user corresponde únicamente a la ejecución de instrucciones previas y posteriores al delay, como la impresión en pantalla.
+Durante el tiempo de espera, el control del procesador lo tiene el kernel del sistema operativo, el cual puede asignarlo a otros procesos o tareas, demostrando así la eficiencia del manejo de concurrencia en sistemas multitarea.
+
+**¿Por qué el tiempo user es casi 0.000s? y ¿Quién tenía el control del procesador?**
+
+Porque el programa no está usando la CPU activamente durante esos 2 segundos. Cuando se usa nanosleep el proceso le dice al kernel:
+
+“duérmeme por 2 segundos” lo que hace que el proceso se bloquee (sleep state) y no ejecuta instrucciones por ende no consume CPU y esto causa que 
+lo tiempo sean, en real aproximadamente≈ 2 segundos (tiempo de reloj) y en user aproximadamente 0 (CPU casi no trabajó)
+
+Es decir que el tiempo user es cercano a 0.000s porque el programa no realiza una espera activa, sino que utiliza la llamada al sistema nanosleep, la cual suspende el proceso durante el tiempo especificado. Durante este periodo, el proceso no ejecuta instrucciones ni consume CPU, por lo que el tiempo de uso del procesador es mínimo. El control del procesador durante esos 2 segundos lo tiene el kernel del sistema operativo, que puede asignarlo a otros procesos o tareas mientras el programa permanece en estado de espera. El proceso no usa CPU porque está bloqueado; el kernel es quien maneja el procesador en ese tiempo.
+ 
 
 ---
 
 ## Actividad 5: Heap vs Stack
 
-### Heap
+### Contexto
 
-* Monitoreo con `htop`
-* Evento OOM:
+El espacio de direcciones de un proceso tiene límites definidos:
 
-```bash
-dmesg | tail -n 20
-```
+- **Heap**: maneja memoria dinámica (crece hacia arriba)
+- **Stack**: maneja variables locales y llamadas a funciones (crece hacia abajo)
 
-**Resultado:**
-
-```
-[COMPLETAR]
-```
-
-### Stack
-
-* Error observado:
-
-```
-Segmentation fault
-```
-
-**Profundidad alcanzada:**
-
-```
-[COMPLETAR]
-```
-
-**Análisis:**
-
-```
-[COMPLETAR]
-```
+El objetivo es observar cómo se comportan ambos cuando se consumen de forma infinita.
 
 ---
+
+##  Código utilizado
+
+```cpp
+#include <iostream>
+#include <cstring>
+#include <vector>
+
+using namespace std;
+
+// 🔴 HEAP: reserva infinita
+void consumirHeap() {
+    vector<char*> bloques;
+
+    while (true) {
+        char* bloque = new char[1024 * 1024]; // 1 MB
+        memset(bloque, 0, 1024 * 1024);      // forzar uso real de memoria
+        bloques.push_back(bloque);
+
+        cout << "Reservado 1MB en heap. Total: " << bloques.size() << " MB" << endl;
+    }
+}
+
+// 🔴 STACK: recursión infinita
+void consumirStack(int profundidad = 0) {
+    char bloque[1024 * 1024]; // 1 MB en stack
+    memset(bloque, 0, sizeof(bloque));
+
+    cout << "Profundidad: " << profundidad << " MB en stack" << endl;
+
+    consumirStack(profundidad + 1);
+}
+
+int main() {
+    int opcion;
+    cout << "1. Heap infinito\n2. Stack infinito\nSeleccione: ";
+    cin >> opcion;
+
+    if (opcion == 1) consumirHeap();
+    else consumirStack();
+
+    return 0;
+}
+```
+
+## Consumo de Heap 
+
+<img width="1188" height="572" alt="image" src="https://github.com/user-attachments/assets/0ae91e02-41c1-4d28-b9e3-ed245eb02774" />
+
+Se ejecutó el programa y se monitoreó con htop. El proceso ./memoria (PID 7989) consumió rápidamente memoria, en htop se vio claramente cómo aumentaba la columna VIRT (memoria virtual) y especialmente RES (memoria residente). y el sistema llegó a un estado crítico (Load average alto, ~99% de uso de memoria).
+
+- Evento OOM Killer (Out of Memory)
+Después de que el sistema mató el proceso, se ejecutó:
+```
+sudo dmesg | tail -n 20
+```
+
+Resultado obtenido:
+```
+[ 2551.168614] oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=/,mems_allowed=0,global_oom,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.gnome.Terminal.slice/vte-spawn-2e1aa72e-641b-4b08-92f7-f17e2c292543.scope,task=memoria,pid=9015,uid=1000
+[ 2551.168639] Out of memory: Killed process 9015 (memoria) total-vm:5143420kB, anon-rss:2860800kB, file-rss:0kB, shmem-rss:0kB, UID:1000 pgtables:10112kB oom_score_adj:200
+```
+- El proceso llegó a reservar más de 5 GB de memoria virtual (total-vm: 5143420 kB).
+- Se utilizaron aproximadamente 2.86 GB de memoria física real (anon-rss: 2860800 kB).
+- Cuando el sistema se quedó sin memoria disponible, el OOM Killer intervino y terminó el proceso automáticamente.
+Esto demuestra que el Heap puede crecer casi hasta agotar toda la memoria del sistema (física + swap).
+
+## Consumo de Stack 
+
+<img width="833" height="548" alt="image" src="https://github.com/user-attachments/assets/b5da422e-0692-4f99-ae7e-37ff59a70a60" />
+
+El error observado fue 
+```
+[ 2672.273180] memoria[9324]: segfault at 7fff7cebddd0 ip 000063d38b565410 sp 00007fff7cebddd0 error 6 in memoria[1410,63d38b565000+2000] likely on CPU 1 (core 1, socket 0)```
+
+```
+
+- El proceso terminó con un Segmentation Fault (segfault).
+- Esto ocurrió porque el stack tiene un límite máximo fijo (generalmente 8 MB en Ubuntu).
+Cada llamada recursiva + el arreglo local de 1 MB hace que el stack crezca muy rápido y supere este límite, ademas el Sistema Operativo detiene el proceso inmediatamente con un segfault para evitar que se corrompa otras áreas de memoria.
+
+A diferencia del Heap, aquí no se llega al OOM porque el límite del stack es mucho más restrictivo y se hace cumplir antes.
+
+<img width="510" height="297" alt="image" src="https://github.com/user-attachments/assets/80e00913-38c0-443d-b98f-9379ef50e0e0" />
+
+El proceso falló con Segmentation Fault al alcanzar 6 MB de profundidad en el stack.
+Esto ocurre porque el stack tiene un tamaño máximo fijo configurado por el sistema operativo
+
 
 ## Actividad 6: Procesos vs Hilos
 
